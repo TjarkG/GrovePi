@@ -56,3 +56,6 @@ Release
 *.pfx
 Firmware/Source/grovepi/\.pioenvs/
 Firmware/Source/grovepi/\.vscode/
+
+# Pycharm
+.idea
