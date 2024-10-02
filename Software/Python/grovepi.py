@@ -50,18 +50,13 @@ import time
 import math
 import struct
 import numpy
+from typing import Literal
 
-import di_i2c
-
-
-def set_bus(bus):
-    global i2c
-    i2c = di_i2c.DI_I2C(bus=bus, address=address)
-
+import smbus
 
 address = 0x04
 max_recv_size = 10
-set_bus("RPI_1SW")
+i2c = smbus.SMBus(1)
 
 if sys.version_info < (3, 0):
     p_version = 2
@@ -208,43 +203,26 @@ def write_i2c_block(block, _custom_timing=None):
     data = block[1:]
     while counter < 3:
         try:
-            i2c.write_reg_list(reg, data)
+            i2c.write_i2c_block_data(address, reg, data)
             time.sleep(0.002 + additional_waiting)
             return
         except KeyboardInterrupt:
             raise KeyboardInterrupt
-        except:
-            counter += 1
-            time.sleep(0.003)
-            continue
+        # except:
+        # counter += 1
+        # time.sleep(0.003)
 
 
 # Read I2C block from the GrovePi
 def read_i2c_block(no_bytes=max_recv_size):
-    """
-    Now catches and raises Keyboard Interrupt that the user is responsible to catch.
-    """
-    data = data_not_available_cmd
-    counter = 0
-    while data[0] in [data_not_available_cmd[0], 255] and counter < 3:
-        try:
-            data = i2c.read_list(reg=None, len=no_bytes)
-            time.sleep(0.002 + additional_waiting)
-            if counter > 0:
-                counter = 0
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
-        except:
-            counter += 1
-            time.sleep(0.003)
+    data = i2c.read_i2c_block_data(address, 0, no_bytes)
 
     return data
 
 
-def read_identified_i2c_block(read_command_id, no_bytes):
-    data = [-1]
-    while len(data) <= 1:
-        data = read_i2c_block(no_bytes + 1)
+def read_identified_i2c_block(_id, no_bytes):
+    data = read_i2c_block(no_bytes + 1)
+    print("Read identify" + str(data))
 
     return data[1:]
 
@@ -252,7 +230,8 @@ def read_identified_i2c_block(read_command_id, no_bytes):
 # Arduino Digital Read
 def digitalRead(pin):
     write_i2c_block(dRead_cmd + [pin, unused, unused])
-    data = read_identified_i2c_block(dRead_cmd, no_bytes=1)[0]
+    data = read_i2c_block(1)[0]
+    # data = read_identified_i2c_block(dRead_cmd, no_bytes=1)[0]
     return data
 
 
@@ -278,7 +257,7 @@ def analogWrite(pin, value):
 
 
 # Setting Up Pin mode on Arduino
-def pinMode(pin, mode):
+def pinMode(pin: int, mode: Literal["OUTPUT", "INPUT"]):
     if mode == "OUTPUT":
         write_i2c_block(pMode_cmd + [pin, 1, unused])
     elif mode == "INPUT":

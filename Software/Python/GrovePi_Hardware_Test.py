@@ -48,6 +48,8 @@ print("GrovePi Basic Hardware Test.")
 print("Setup:  Connect the button sensor to port A0.  Connect a Grove Buzzer to port D8.")
 print("Press the button and the buzzer will buzz!")
 
+print(grovepi.version())
+
 while True:
     try:
         butt_val = grovepi.digitalRead(button)  # Each time we go through the loop, we read A0.
