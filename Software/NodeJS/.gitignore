@@ -13,3 +13,4 @@ node_modules
 .wafpickle-*
 CVS
 npm-debug.log
+package-lock.json

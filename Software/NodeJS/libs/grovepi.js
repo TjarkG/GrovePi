@@ -1,12 +1,9 @@
 // Modules
 const i2c = require('i2c-bus');
 const async = require('async');
-const log = require('npmlog');
-const sleep = require('sleep');
 const fs = require('fs');
 const commands = require('./commands');
 
-const I2CCMD = 1;
 const debugMode = false;
 const i2c0Path = '/dev/i2c-0';
 const i2c1Path = '/dev/i2c-1';
@@ -17,7 +14,6 @@ const initWait = 1;     // in seconds
 
 let isInit = false;
 let isHalt = false;
-const isBusy = false;
 
 const ADDRESS = 0x04;
 
@@ -65,7 +61,7 @@ GrovePi.prototype.init = function () {
 
         if (!isInit) {
             this.debug('GrovePi is initing')
-            sleep.sleep(initWait)
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, initWait * 1000)
             isInit = true
 
             if (typeof onInit == 'function')
@@ -166,10 +162,12 @@ GrovePi.prototype.pinMode = function (pin, mode) {
 }
 GrovePi.prototype.debug = function (msg) {
     if (this.debugMode)
-        log.info('GrovePi.board', msg)
+        console.log('GrovePi.board', msg);
 }
+
+// Sleep milliseconds
 GrovePi.prototype.wait = function (ms) {
-    sleep.usleep(1000 * ms)
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 }
 
 // GrovePi functions

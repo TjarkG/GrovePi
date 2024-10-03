@@ -1,6 +1,6 @@
-var util = require('util')
-var Sensor = require('./sensor')
-var commands = require('../../commands')
+const util = require('util');
+const Sensor = require('./sensor');
+const commands = require('../../commands');
 
 function I2cSensor() {
     Sensor.apply(this, Array.prototype.slice.call(arguments))
