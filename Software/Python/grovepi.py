@@ -52,11 +52,12 @@ import struct
 import numpy
 from typing import Literal
 
-import smbus
+import pigpio
 
 address = 0x04
 max_recv_size = 10
-i2c = smbus.SMBus(1)
+pi = pigpio.pi()
+i2c = pi.i2c_open(1, address)
 
 if sys.version_info < (3, 0):
     p_version = 2
@@ -194,63 +195,63 @@ encoder_dis_cmd = [15]
 # data from RPi to Arduino
 
 # Write I2C block to the GrovePi
-def write_i2c_block(block, _custom_timing=None):
-    """
-    Now catches and raises Keyboard Interrupt that the user is responsible to catch.
-    """
+def write_i2c_block(block: list[int], _custom_timing=None) -> None:
+    assert len(block) >= 1
     counter = 0
     reg = block[0]
     data = block[1:]
     while counter < 3:
         try:
-            i2c.write_i2c_block_data(address, reg, data)
+            pi.i2c_write_i2c_block_data(i2c, reg, data)
             time.sleep(0.002 + additional_waiting)
             return
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
-        # except:
-        # counter += 1
-        # time.sleep(0.003)
+        except pigpio.error:
+            counter += 1
+            time.sleep(0.003)
 
 
 # Read I2C block from the GrovePi
-def read_i2c_block(no_bytes=max_recv_size):
-    data = i2c.read_i2c_block_data(address, 0, no_bytes)
+def read_i2c_block(no_bytes: int = max_recv_size) -> list[int]:
+    counter = 0
+    while counter < 3:
+        try:
+            data = pi.i2c_read_device(i2c, no_bytes)[1]
+            time.sleep(0.002 + additional_waiting)
+            return list[int](data)
+        except pigpio.error:
+            counter += 1
+            time.sleep(0.003)
 
-    return data
 
-
-def read_identified_i2c_block(_id, no_bytes):
+def read_identified_i2c_block(_id, no_bytes: int) -> list[int]:
     data = read_i2c_block(no_bytes + 1)
-    print("Read identify" + str(data))
 
     return data[1:]
 
 
 # Arduino Digital Read
-def digitalRead(pin):
+def digitalRead(pin: int) -> bool:
     write_i2c_block(dRead_cmd + [pin, unused, unused])
     data = read_i2c_block(1)[0]
-    # data = read_identified_i2c_block(dRead_cmd, no_bytes=1)[0]
-    return data
+    return data != 0
 
 
 # Arduino Digital Write
-def digitalWrite(pin, value):
+def digitalWrite(pin: int, value: bool) -> 1:
     write_i2c_block(dWrite_cmd + [pin, value, unused])
     read_i2c_block(no_bytes=1)
     return 1
 
 
 # Read analog value from Pin
-def analogRead(pin):
+def analogRead(pin: int) -> int:
     write_i2c_block(aRead_cmd + [pin, unused, unused])
     number = read_identified_i2c_block(aRead_cmd, no_bytes=2)
     return number[0] * 256 + number[1]
 
 
-# Write PWM
-def analogWrite(pin, value):
+# Write PWM. Only Works for Pins 3, 5, 6, 9, 10, 11
+def analogWrite(pin: int, value: int) -> 1:
     write_i2c_block(aWrite_cmd + [pin, value, unused])
     read_i2c_block(no_bytes=1)
     return 1
@@ -282,14 +283,14 @@ def temp(pin, model='1.0'):
 
 
 # Read value from Grove Ultrasonic
-def ultrasonicRead(pin):
+def ultrasonicRead(pin: int) -> int:
     write_i2c_block(uRead_cmd + [pin, unused, unused])
     number = read_identified_i2c_block(uRead_cmd, no_bytes=2)
     return number[0] * 256 + number[1]
 
 
 # Read the firmware version
-def version():
+def version() -> str:
     write_i2c_block(version_cmd + [unused, unused, unused])
     number = read_identified_i2c_block(version_cmd, no_bytes=3)
     return "%s.%s.%s" % (number[0], number[1], number[2])

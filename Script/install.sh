@@ -4,9 +4,9 @@ PIHOME=/home/pi
 DEXTERSCRIPT=$PIHOME/Dexter/lib/Dexter/script_tools
 USER_ID=$(/usr/bin/id -u)
 USER_NAME=$(/usr/bin/who am i | awk '{ print $1 }')
-SCRIPT_PATH=$(/usr/bin/realpath $0)
-DIR_PATH=$(/usr/bin/dirname ${SCRIPT_PATH} | sed 's/\/Script$//')
-REPO_PATH=$(readlink -f $(dirname $0) | grep -E -o "^(.*?\\GrovePi)")
+SCRIPT_PATH=$(/usr/bin/realpath "$0")
+DIR_PATH=$(/usr/bin/dirname "${SCRIPT_PATH}" | sed 's/\/Script$//')
+REPO_PATH=$(readlink -f "$(dirname "$0")" | grep -E -o "^(.*?\\GrovePi)")
 
 source $DEXTERSCRIPT/functions_library.sh
 
@@ -38,7 +38,7 @@ install_spi_i2c() {
 		feedback "Removing blacklist from ${RASPI_BL} . . ."
 		for i in ${MODS}
 		do
-			MOD_NAME=$(echo $i | tr [a-z] [A-Z])
+			MOD_NAME=$(echo "$i" | tr [a-z] [A-Z])
 			sudo sed -i -e "s/blacklist ${i}-bcm2708/#blacklist ${i}-bcm2708/g" ${RASPI_BL}
 			echo "${MOD_NAME} not present or removed from blacklist"
 		done
@@ -78,8 +78,8 @@ install_spi_i2c() {
 		fi
 	done
 
-	sudo adduser ${USER_NAME} i2c
-	sudo chmod +x ${DIR_PATH}/Software/Scratch/GrovePi_Scratch_Scripts/*.sh
+	sudo adduser "${USER_NAME}" i2c
+	sudo chmod +x "${DIR_PATH}/Software/Scratch/GrovePi_Scratch_Scripts/*.sh"
 }
 
 install_avr() {
@@ -87,7 +87,7 @@ install_avr() {
 	source $DEXTERSCRIPT/install_avrdude.sh
 	create_avrdude_folder
   install_avrdude
-  cd $ROBOT_DIR
+  cd "$ROBOT_DIR" || exit
   echo "done with AVRDUDE for the GrovePi"
 }
 

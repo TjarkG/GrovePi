@@ -792,12 +792,6 @@ void receiveData(const int byteCount)
 {
 	if (!need_extra_loop)
 	{
-		if( byteCount == 1)
-		{
-			Wire.read();
-			return;
-		}
-
 		while (Wire.available())
 		{
 			if (Wire.available() == 4)

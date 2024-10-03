@@ -40,9 +40,13 @@ import grovepi
 # Connect the Grove Button to Analog Port 0.
 button = 14  # This is the A0 pin.
 buzzer = 8  # This is the D8 pin.
+ultrasound = 4 # Connector D4
+a_out = 3 # Connector D3 pin 1
 
 grovepi.pinMode(button, "INPUT")
+grovepi.pinMode(ultrasound, "INPUT")
 grovepi.pinMode(buzzer, "OUTPUT")
+grovepi.pinMode(a_out, "OUTPUT")
 
 print("GrovePi Basic Hardware Test.")
 print("Setup:  Connect the button sensor to port A0.  Connect a Grove Buzzer to port D8.")
@@ -51,16 +55,16 @@ print("Press the button and the buzzer will buzz!")
 print(grovepi.version())
 
 while True:
-    try:
-        butt_val = grovepi.digitalRead(button)  # Each time we go through the loop, we read A0.
-        print(butt_val)  # Print the value of A0.
-        if butt_val == 1:
-            grovepi.digitalWrite(buzzer, 1)
-            print('start')
-            time.sleep(1)
-        else:
-            grovepi.digitalWrite(buzzer, 0)
-            time.sleep(.5)
+    distance = grovepi.ultrasonicRead(ultrasound)
+    print(distance)
+    grovepi.analogWrite(a_out, int(distance/2))
 
-    except IOError:
-        print("Error")
+    butt_val = grovepi.digitalRead(button)  # Each time we go through the loop, we read A0.
+    # print(butt_val)  # Print the value of A0.
+    if butt_val == 1:
+        grovepi.digitalWrite(buzzer, True)
+        print('start')
+        time.sleep(1)
+    else:
+        grovepi.digitalWrite(buzzer, False)
+        time.sleep(.5)
